@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from pydantic_settings import BaseSettings
 
 
@@ -30,6 +28,4 @@ class Settings(BaseSettings):
             raise ValueError("OPENAI_API_KEY is still a placeholder.")
 
 
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+settings = Settings()
