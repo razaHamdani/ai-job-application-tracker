@@ -2,7 +2,6 @@ import argparse
 import asyncio
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.services import hash_password

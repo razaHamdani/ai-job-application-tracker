@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models import User
 from app.auth.schemas import LoginRequest
 from app.auth.services import create_access_token, verify_password
+from app.config import settings
 from app.database import get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,7 +28,7 @@ async def login(
         value=token,
         httponly=True,
         samesite="strict",
-        max_age=60 * 60 * 24,
+        max_age=settings.jwt_expire_minutes * 60,
     )
     return {"message": "Login successful"}
 
