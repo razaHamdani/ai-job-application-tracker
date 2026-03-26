@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Applications - Job Tracker{% endblock %}
+{% block content %}
+<h2>Applications</h2>
+<a href="/applications/new" role="button">New Application</a>
+
+<form method="GET" style="margin: 1rem 0;">
+    <select name="status" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        {% for s in statuses %}
+        <option value="{{ s.value }}" {{ 'selected' if status_filter == s.value }}>{{ s.value }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Status</th>
+            <th>Source</th>
+            <th>Applied</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in applications %}
+        <tr>
+            <td><a href="/applications/{{ app.id }}">{{ app.company }}</a></td>
+            <td>{{ app.position }}</td>
+            <td>{{ app.status.value }}</td>
+            <td>{{ app.source or '-' }}</td>
+            <td>{{ app.applied_at.strftime('%Y-%m-%d') if app.applied_at else '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}New Application - Job Tracker{% endblock %}
+{% block content %}
+<h2>New Application</h2>
+<form method="POST" action="/applications/new">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="company">Company</label>
+    <input type="text" id="company" name="company" required>
+    <label for="position">Position</label>
+    <input type="text" id="position" name="position" required>
+    <label for="url">Job URL</label>
+    <input type="url" id="url" name="url">
+    <label for="job_description">Job Description</label>
+    <textarea id="job_description" name="job_description" rows="10" required></textarea>
+    <label for="source">Source</label>
+    <input type="text" id="source" name="source" placeholder="LinkedIn, Indeed, etc.">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+        {% for s in statuses %}
+        <option value="{{ s.value }}">{{ s.value }}</option>
+        {% endfor %}
+    </select>
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="3"></textarea>
+    <button type="submit">Create Application</button>
+</form>
+{% endblock %}

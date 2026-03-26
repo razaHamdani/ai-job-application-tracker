@@ -1,6 +1,7 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,10 +19,22 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 
 @router.post("/score", response_model=AIScoreResponse)
 async def trigger_scoring(
-    data: ScoreRequest,
+    request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    content_type = request.headers.get("content-type", "")
+
+    if "application/json" in content_type:
+        body = await request.json()
+        data = ScoreRequest(**body)
+    else:
+        form = await request.form()
+        data = ScoreRequest(
+            application_id=UUID(str(form.get("application_id", ""))),
+            resume_id=UUID(str(form.get("resume_id", ""))),
+        )
+
     app_result = await db.execute(
         select(JobApplication).where(
             JobApplication.id == data.application_id, JobApplication.user_id == user.id
@@ -55,7 +68,37 @@ async def trigger_scoring(
 
     run_resume_scoring.delay(str(score_result.id))
 
+    if "application/json" not in content_type:
+        return RedirectResponse(
+            url=f"/ai/results/{score_result.id}", status_code=303
+        )
+
     return score_result
+
+
+@router.get("/results/{score_id}")
+async def view_results(
+    score_id: UUID,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AIScoreResult)
+        .join(JobApplication, AIScoreResult.application_id == JobApplication.id)
+        .where(AIScoreResult.id == score_id, JobApplication.user_id == user.id)
+    )
+    score = result.scalar_one_or_none()
+    if not score:
+        raise HTTPException(status_code=404, detail="Score result not found")
+
+    templates = request.app.state.templates
+    return templates.TemplateResponse("ai_agent/results.html", {
+        "request": request,
+        "user": user,
+        "csrf_token": request.session.get("csrf_token", ""),
+        "score": score,
+    })
 
 
 @router.get("/score/{score_id}", response_model=AIScoreResponse)

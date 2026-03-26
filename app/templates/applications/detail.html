@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ application.company }} - {{ application.position }}{% endblock %}
+{% block content %}
+<h2>{{ application.company }} - {{ application.position }}</h2>
+
+<form method="POST" action="/applications/{{ application.id }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="grid">
+        <div>
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" value="{{ application.company }}">
+        </div>
+        <div>
+            <label for="position">Position</label>
+            <input type="text" id="position" name="position" value="{{ application.position }}">
+        </div>
+    </div>
+    <label for="url">Job URL</label>
+    <input type="url" id="url" name="url" value="{{ application.url or '' }}">
+    <label for="job_description">Job Description</label>
+    <textarea id="job_description" name="job_description" rows="8">{{ application.job_description }}</textarea>
+    <div class="grid">
+        <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                {% for s in statuses %}
+                <option value="{{ s.value }}" {{ 'selected' if application.status.value == s.value }}>{{ s.value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="source">Source</label>
+            <input type="text" id="source" name="source" value="{{ application.source or '' }}">
+        </div>
+    </div>
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="3">{{ application.notes or '' }}</textarea>
+    <button type="submit">Update</button>
+</form>
+
+<hr>
+
+<h3>AI Resume Scoring</h3>
+{% if resumes %}
+<form method="POST" action="/ai/score">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="application_id" value="{{ application.id }}">
+    <label for="resume_id">Select Resume</label>
+    <select id="resume_id" name="resume_id">
+        {% for resume in resumes %}
+        <option value="{{ resume.id }}">{{ resume.version_label or resume.filename }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Score Resume</button>
+</form>
+{% else %}
+<p>No resumes uploaded. <a href="/resumes">Upload one first</a>.</p>
+{% endif %}
+
+{% if scores %}
+<h4>Previous Scores</h4>
+<table>
+    <thead>
+        <tr><th>Resume</th><th>Score</th><th>Status</th><th>Date</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for score in scores %}
+        <tr>
+            <td>{{ score.resume_id }}</td>
+            <td>{{ score.overall_score if score.overall_score is not none else '-' }}</td>
+            <td>{{ score.status.value }}</td>
+            <td>{{ score.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td><a href="/ai/results/{{ score.id }}">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}

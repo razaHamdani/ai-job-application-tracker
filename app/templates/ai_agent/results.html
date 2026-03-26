@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}AI Score Results{% endblock %}
+{% block content %}
+<h2>AI Score Results</h2>
+
+{% if score.status.value == "PENDING" %}
+<article>
+    <p>Scoring in progress... This page will refresh automatically.</p>
+    <progress></progress>
+</article>
+{% elif score.status.value == "FAILED" %}
+<article>
+    <p style="color: red;">Scoring failed. Please try again.</p>
+</article>
+{% else %}
+<article>
+    <h3>Overall Score: {{ score.overall_score }}/100</h3>
+    <progress value="{{ score.overall_score }}" max="100"></progress>
+</article>
+
+{% if score.skill_matches %}
+<div class="grid">
+    <article>
+        <h4>Matched Skills</h4>
+        <ul>
+            {% for skill in score.skill_matches.get('matched', []) %}
+            <li>{{ skill }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    <article>
+        <h4>Missing Skills</h4>
+        <ul>
+            {% for skill in score.skill_matches.get('missing', []) %}
+            <li>{{ skill }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    <article>
+        <h4>Partial Skills</h4>
+        <ul>
+            {% for skill in score.skill_matches.get('partial', []) %}
+            <li>{{ skill }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+</div>
+
+{% if score.skill_matches.get('summary') %}
+<article>
+    <h4>Summary</h4>
+    <p>{{ score.skill_matches.summary }}</p>
+</article>
+{% endif %}
+{% endif %}
+
+{% if score.recommendations %}
+<h3>Recommendations</h3>
+<table>
+    <thead>
+        <tr><th>Section</th><th>Suggestion</th><th>Priority</th></tr>
+    </thead>
+    <tbody>
+        {% for rec in score.recommendations %}
+        <tr>
+            <td>{{ rec.section }}</td>
+            <td>{{ rec.suggestion }}</td>
+            <td>{{ rec.priority }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endif %}
+
+<a href="javascript:history.back()">Back</a>
+
+{% endblock %}
+
+{% block scripts %}
+{% if score.status.value == "PENDING" %}
+<script>
+    const scoreId = "{{ score.id }}";
+    const poll = setInterval(async () => {
+        const res = await fetch(`/ai/score/${scoreId}`);
+        const data = await res.json();
+        if (data.status !== "PENDING") {
+            clearInterval(poll);
+            location.reload();
+        }
+    }, 3000);
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Resumes - Job Tracker{% endblock %}
+{% block content %}
+<h2>Resumes</h2>
+
+<form method="POST" action="/resumes/" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="grid">
+        <div>
+            <label for="file">PDF File</label>
+            <input type="file" id="file" name="file" accept=".pdf" required>
+        </div>
+        <div>
+            <label for="version_label">Version Label</label>
+            <input type="text" id="version_label" name="version_label" placeholder="e.g. Backend Engineer v2">
+        </div>
+    </div>
+    <button type="submit">Upload Resume</button>
+</form>
+
+<hr>
+
+<table>
+    <thead>
+        <tr><th>Filename</th><th>Label</th><th>Uploaded</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+        {% for resume in resumes %}
+        <tr>
+            <td>{{ resume.filename }}</td>
+            <td>{{ resume.version_label or '-' }}</td>
+            <td>{{ resume.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <a href="/resumes/{{ resume.id }}/download">Download</a>
+                <form method="POST" action="/resumes/{{ resume.id }}/delete" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="outline secondary" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

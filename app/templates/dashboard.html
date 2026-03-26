@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Job Tracker{% endblock %}
+{% block content %}
+<h2>Dashboard</h2>
+<div class="grid">
+    <article>
+        <h3>Total Applications</h3>
+        <p style="font-size: 2rem;">{{ stats.total }}</p>
+    </article>
+    <article>
+        <h3>Active</h3>
+        <p style="font-size: 2rem;">{{ stats.active }}</p>
+    </article>
+    <article>
+        <h3>Offers</h3>
+        <p style="font-size: 2rem;">{{ stats.offers }}</p>
+    </article>
+</div>
+
+<h3>Recent Applications</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Status</th>
+            <th>Applied</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in recent %}
+        <tr>
+            <td><a href="/applications/{{ app.id }}">{{ app.company }}</a></td>
+            <td>{{ app.position }}</td>
+            <td><span class="status-badge">{{ app.status.value }}</span></td>
+            <td>{{ app.applied_at.strftime('%Y-%m-%d') if app.applied_at else '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

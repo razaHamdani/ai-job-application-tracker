@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Login - Job Tracker{% endblock %}
+{% block content %}
+<article style="max-width: 400px; margin: 2rem auto;">
+    <h2>Login</h2>
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <form method="POST" action="/auth/login">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Login</button>
+    </form>
+</article>
+{% endblock %}
