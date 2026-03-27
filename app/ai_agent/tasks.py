@@ -15,20 +15,13 @@ from celery_worker import celery_app
 
 async def _run_scoring(score_result_id: str) -> None:
     async with async_session() as db:
-        result = await db.execute(
-            select(AIScoreResult).where(AIScoreResult.id == score_result_id)
+        row = await db.execute(
+            select(AIScoreResult, JobApplication, ResumeVersion)
+            .join(JobApplication, AIScoreResult.application_id == JobApplication.id)
+            .join(ResumeVersion, AIScoreResult.resume_id == ResumeVersion.id)
+            .where(AIScoreResult.id == score_result_id)
         )
-        score_result = result.scalar_one()
-
-        app_result = await db.execute(
-            select(JobApplication).where(JobApplication.id == score_result.application_id)
-        )
-        application = app_result.scalar_one()
-
-        resume_result = await db.execute(
-            select(ResumeVersion).where(ResumeVersion.id == score_result.resume_id)
-        )
-        resume = resume_result.scalar_one()
+        score_result, application, resume = row.one()
 
         try:
             client = OpenAIClient()
