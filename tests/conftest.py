@@ -6,7 +6,12 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/job_tracker_test"
+import os
+
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/job_tracker_test",
+)
 
 
 @pytest.fixture(scope="session")

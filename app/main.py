@@ -20,8 +20,8 @@ def create_app() -> FastAPI:
     templates = Jinja2Templates(directory="app/templates")
     app.state.templates = templates
 
-    app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret)
     app.add_middleware(CSRFMiddleware)
+    app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret)
 
     app.include_router(auth_router)
     app.include_router(dashboard_router)
