@@ -39,6 +39,7 @@ app/
 - **AI**: OpenAI (GPT-4o, JSON mode)
 - **PDF Parsing**: pypdf
 - **Auth**: JWT (python-jose) + bcrypt (passlib)
+- **Session**: itsdangerous (for SessionMiddleware / CSRF)
 - **UI**: Jinja2 templates + Pico CSS
 
 ## Prerequisites
@@ -55,7 +56,7 @@ app/
 git clone git@github.com:razaHamdani/ai-job-application-tracker.git
 cd ai-job-application-tracker
 
-# Start PostgreSQL + Redis
+# Start PostgreSQL + Redis (port 5433 to avoid conflicts)
 docker-compose up -d
 
 # Create virtual environment
@@ -64,12 +65,16 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -e .  # Required: registers 'app' package so imports work
 
 # Copy env and configure
 cp .env.example .env
 # Edit .env: set JWT_SECRET, OPENAI_API_KEY
+# NOTE: Use 127.0.0.1 (not localhost) for DB and Redis URLs.
+#       PostgreSQL is on port 5433, not 5432.
 
 # Run migrations
+alembic revision --autogenerate -m "initial tables"
 alembic upgrade head
 
 # Create a user (no registration endpoint)
@@ -79,7 +84,7 @@ python -m app.cli create-user --username <name> --password <pass>
 uvicorn app.main:app --reload
 
 # Start Celery worker (separate terminal)
-celery -A celery_worker worker --loglevel=info --concurrency=2
+celery -A celery_worker worker --loglevel=info --pool=solo  # --pool=solo required on Windows
 ```
 
 ## Configuration
@@ -88,8 +93,8 @@ Copy `.env.example` to `.env` and set the required values:
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string (`postgresql+asyncpg://...`) |
-| `REDIS_URL` | No | Redis URL (default: `redis://localhost:6379/0`) |
+| `DATABASE_URL` | Yes | PostgreSQL connection string (e.g. `postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/job_tracker`) |
+| `REDIS_URL` | No | Redis URL (default: `redis://127.0.0.1:6379/0`) |
 | `JWT_SECRET` | Yes | Secret key for JWT signing (generate with `python -c "import secrets; print(secrets.token_hex(32))"`) |
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
 | `OPENAI_MODEL` | No | Model to use (default: `gpt-4o`) |
@@ -129,6 +134,7 @@ ai-job-application-tracker/
 ├── tests/                 # pytest test suite
 ├── docs/plans/            # Design docs + implementation plan
 ├── celery_worker.py       # Celery app configuration
+├── pyproject.toml          # Editable install config
 ├── requirements.txt
 ├── docker-compose.yml
 ├── .env.example
